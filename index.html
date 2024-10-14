@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Salesforce Account Search</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 50px;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      color: #333;
+    }
+    #search-container {
+      margin-bottom: 20px;
+    }
+    #search-input {
+      width: 300px;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #search-button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-left: 10px;
+      border: none;
+      border-radius: 4px;
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+    #search-button:hover {
+      background-color: #218838;
+    }
+    #result-container {
+      margin-top: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    #message {
+      margin-top: 20px;
+      font-size: 16px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>Salesforce Account Search</h1>
+  <div id="search-container">
+    <input type="text" id="search-input" placeholder="Enter Account Name keyword" />
+    <button id="search-button">Search</button>
+  </div>
+  <div id="result-container">
+    <table id="result-table" style="display: none;">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Website</th>
+          <th>Industry</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody id="result-body">
+        <!-- Results will be appended here -->
+      </tbody>
+    </table>
+    <div id="message"></div>
+  </div>
+
+  <script>
+    document.getElementById('search-button').addEventListener('click', async () => {
+      const keyword = document.getElementById('search-input').value.trim();
+      const resultTable = document.getElementById('result-table');
+      const resultBody = document.getElementById('result-body');
+      const message = document.getElementById('message');
+
+      if (!keyword) {
+        alert('Please enter a keyword.');
+        return;
+      }
+
+      // Clear previous results
+      resultBody.innerHTML = '';
+      resultTable.style.display = 'none';
+      message.textContent = 'Searching...';
+
+      try {
+        const response = await fetch('/search', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ keyword })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          message.textContent = `Error: ${data.error}`;
+        } else if (data.length === 0) {
+          message.textContent = 'No records found.';
+        } else {
+          // Populate the table with results
+          data.forEach(record => {
+            const row = document.createElement('tr');
+
+            const idCell = document.createElement('td');
+            idCell.textContent = record.Id;
+            row.appendChild(idCell);
+
+            const nameCell = document.createElement('td');
+            nameCell.textContent = record.Name;
+            row.appendChild(nameCell);
+
+            const phoneCell = document.createElement('td');
+            phoneCell.textContent = record.Phone || 'N/A';
+            row.appendChild(phoneCell);
+
+            const websiteCell = document.createElement('td');
+            websiteCell.textContent = record.Website || 'N/A';
+            row.appendChild(websiteCell);
+
+            const industryCell = document.createElement('td');
+            industryCell.textContent = record.Industry || 'N/A';
+            row.appendChild(industryCell);
+
+            const descriptionCell = document.createElement('td');
+            descriptionCell.textContent = record.Description || 'N/A';
+            row.appendChild(descriptionCell);
+
+            resultBody.appendChild(row);
+          });
+
+          resultTable.style.display = 'table';
+          message.textContent = '';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        message.textContent = 'An error occurred while fetching data.';
+      }
+    });
+  </script>
+</body>
+</html>
